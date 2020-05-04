@@ -6,6 +6,10 @@ import Card from "./components/Card";
 import menuData from "./db/data";
 import BillItem from "./components/Bill_Item";
 import StripeCheckout from "react-stripe-checkout";
+import axios from "axios";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+toast.configure();
 function App() {
   //cart items state
   const [items, setItems] = useState([]);
@@ -16,7 +20,6 @@ function App() {
     .reduce((accumulator, currentValue) => accumulator + currentValue.price, 0)
     .toFixed(2);
 
-   
   useEffect(() => {
     setData(menuData);
   }, []);
@@ -31,8 +34,20 @@ function App() {
   };
 
   /* :::::::::      :::::::::::: */
-  function handleToken(token, address) {
-    console.log(token, address);
+  async function handleToken(token, address) {
+    const response = await axios.post(
+      "http://localhost:4000/checkout",{  token,
+      items,
+      price}
+    );
+    const { status } = response.data;
+   
+    if (status === "success") {
+      setItems([])
+      toast("Success! Check email for details", { type: "success" });
+    } else {
+      toast("Somethin went wrong!!!", { type: "error" });
+    }
   }
 
   return (
@@ -62,14 +77,16 @@ function App() {
         </div>
         <div className="col-4 pt-5">
           <div className="d-flex justify-content-center">
-           {items.length > 0 && ( <StripeCheckout
-              token={handleToken}
-              className="mb-3 "
-              billingAddress
-              stripeKey={process.env.REACT_APP_STRIPE_KEY}
-              amount={price * 100}
-              name={items.toString()}
-            />)}
+            {items.length > 0 && (
+              <StripeCheckout
+                token={handleToken}
+                className="mb-3 "
+                billingAddress
+                stripeKey={process.env.REACT_APP_STRIPE_KEY}
+                amount={price * 100}
+                
+              />
+            )}
           </div>
           <div className="card">
             <div className="card-header d-flex justify-content-end align-items-baseline">
