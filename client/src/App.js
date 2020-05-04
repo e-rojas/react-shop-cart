@@ -5,20 +5,36 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Card from "./components/Card";
 import menuData from "./db/data";
 import BillItem from "./components/Bill_Item";
+import StripeCheckout from "react-stripe-checkout";
 function App() {
+  //cart items state
   const [items, setItems] = useState([]);
+  //main menu loading data
   const [data, setData] = useState([]);
+
+  const price = items
+    .reduce((accumulator, currentValue) => accumulator + currentValue.price, 0)
+    .toFixed(2);
+
+   
   useEffect(() => {
     setData(menuData);
   }, []);
+  //onclick addItems from cart
   const addItem = (cartItem) => {
     setItems([...items, cartItem]);
-    console.log(items);
   };
+  //onclik removeItem from cart
   const removeItem = (id) => {
     console.log("id:", id);
     setItems([...items.filter((item) => item.id !== id)]);
   };
+
+  /* :::::::::      :::::::::::: */
+  function handleToken(token, address) {
+    console.log(token, address);
+  }
+
   return (
     <>
       <Header />
@@ -45,6 +61,16 @@ function App() {
           })}
         </div>
         <div className="col-4 pt-5">
+          <div className="d-flex justify-content-center">
+           {items.length > 0 && ( <StripeCheckout
+              token={handleToken}
+              className="mb-3 "
+              billingAddress
+              stripeKey={process.env.REACT_APP_STRIPE_KEY}
+              amount={price * 100}
+              name={items.toString()}
+            />)}
+          </div>
           <div className="card">
             <div className="card-header d-flex justify-content-end align-items-baseline">
               <i className="fas fa-shopping-cart mr-1"></i>
